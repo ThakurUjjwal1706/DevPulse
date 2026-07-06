@@ -92,3 +92,14 @@ type DataPoint struct {
 	Date  string  `json:"date"`
 	Value float64 `json:"value"`
 }
+
+type ChatRequest struct {
+	Message     string `json:"message"`
+	DeveloperID string `json:"developerId"`
+}
+
+type ChatResponse struct {
+	Reply      string `json:"reply"`
+	IsFallback bool   `json:"isFallback"`
+}
+

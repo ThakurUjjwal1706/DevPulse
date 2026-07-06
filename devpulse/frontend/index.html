@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=1.1" />
 </head>
 <body>
 
@@ -28,7 +28,6 @@
     </div>
     <div class="nav-mid">
       <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
-      <button class="nav-tab" data-tab="metrics">Metrics</button>
       <button class="nav-tab" data-tab="team">Team</button>
     </div>
     <div class="nav-right">
@@ -124,18 +123,6 @@
 
     <!-- Main -->
     <main class="main">
-
-      <!-- Metrics View -->
-      <div class="welcome" id="metricsView" style="display:none">
-        <div class="welcome-graphic">
-          <div class="wg-ring wg-ring-1" style="border-color:#fca5a5"></div>
-          <div class="wg-center" style="background:linear-gradient(135deg,#f43f5e,#fbbf24)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-          </div>
-        </div>
-        <h1 class="welcome-title">Global Metrics</h1>
-        <p class="welcome-sub">Organization-wide DORA tracking and performance aggregates are coming soon in v2.0.</p>
-      </div>
 
       <!-- Team / Manager View -->
       <div class="dashboard" id="teamView" style="display:none">
@@ -502,6 +489,47 @@
     </main>
   </div>
 
-  <script src="app_v4.js"></script>
+  <!-- Floating AI Assistant Chat -->
+  <div class="ai-chat-widget">
+    <button class="chat-toggle-btn" id="chatToggleBtn" title="Ask DevPulse AI">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span class="chat-pulse"></span>
+    </button>
+    <div class="chat-window" id="chatWindow" style="display: none;">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">🤖</div>
+          <div>
+            <div class="chat-title">DevPulse Assistant</div>
+            <div class="chat-status"><span class="chat-status-dot"></span>Online</div>
+          </div>
+        </div>
+        <button class="chat-close-btn" id="chatCloseBtn">&times;</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg system">
+          👋 Hi! I'm your DevPulse Assistant. Ask me anything about DORA metrics, team productivity, or definitions.
+        </div>
+      </div>
+      <div class="chat-chips" id="chatChips">
+        <button class="chat-chip" data-q="What is DORA?">What is DORA?</button>
+        <button class="chat-chip" data-q="How is Cycle Time calculated?">Explain Cycle Time</button>
+        <button class="chat-chip" data-q="What is a good Bug Escape Rate?">Good Bug Rate?</button>
+      </div>
+      <form class="chat-input-form" id="chatForm">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Ask a question..." required autocomplete="off" />
+        <button type="submit" class="chat-send-btn" id="chatSendBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app_v4.js?v=1.1"></script>
 </body>
 </html>

@@ -10,5 +10,6 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		api.GET("/developers", handlers.GetDevelopers)
 		api.GET("/dashboard/:developerId", handlers.GetDashboard)
+		api.POST("/chat", handlers.PostChat)
 	}
 }

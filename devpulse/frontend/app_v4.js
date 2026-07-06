@@ -96,7 +96,6 @@ async function selectDev(devId, idx) {
   
   document.getElementById('welcomeState').style.display = 'none';
   document.getElementById('dashboard').style.display = 'none';
-  if (document.getElementById('metricsView')) document.getElementById('metricsView').style.display = 'none';
   if (document.getElementById('teamView')) document.getElementById('teamView').style.display = 'none';
   document.getElementById('loader').style.display = 'flex';
   try {
@@ -340,17 +339,156 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
     
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('welcomeState').style.display = 'none';
-    if (document.getElementById('metricsView')) document.getElementById('metricsView').style.display = 'none';
     if (document.getElementById('teamView')) document.getElementById('teamView').style.display = 'none';
     
     const tab = btn.dataset.tab;
     if (tab === 'dashboard') {
       if (currentDev) document.getElementById('dashboard').style.display = 'flex';
       else document.getElementById('welcomeState').style.display = 'flex';
-    } else if (tab === 'metrics') {
-      if (document.getElementById('metricsView')) document.getElementById('metricsView').style.display = 'flex';
     } else if (tab === 'team') {
       if (document.getElementById('teamView')) document.getElementById('teamView').style.display = 'flex';
     }
   });
 });
+
+// ── AI Assistant Chat Orchestration ──
+const chatToggleBtn = document.getElementById('chatToggleBtn');
+const chatWindow = document.getElementById('chatWindow');
+const chatCloseBtn = document.getElementById('chatCloseBtn');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const chatMessages = document.getElementById('chatMessages');
+const chatChips = document.getElementById('chatChips');
+
+// Toggle chat
+chatToggleBtn.addEventListener('click', () => {
+  const isHidden = chatWindow.style.display === 'none';
+  chatWindow.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) {
+    chatInput.focus();
+    // Hide the new message pulse indicator when opened
+    const pulse = chatToggleBtn.querySelector('.chat-pulse');
+    if (pulse) pulse.style.display = 'none';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+});
+
+chatCloseBtn.addEventListener('click', () => {
+  chatWindow.style.display = 'none';
+});
+
+// Append message
+function appendChatMessage(sender, text, isMarkdown = false) {
+  const msg = document.createElement('div');
+  msg.className = `chat-msg ${sender}`;
+  
+  if (isMarkdown && sender === 'assistant') {
+    msg.innerHTML = parseChatMarkdown(text);
+  } else {
+    // Plain text escaping
+    const p = document.createElement('p');
+    p.textContent = text;
+    msg.appendChild(p);
+  }
+  
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Simple Markdown parser for clean bubble visual styling
+function parseChatMarkdown(text) {
+  if (!text) return '';
+  let html = text;
+  
+  // Bold **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italics *text*
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Inline code `code`
+  html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+  
+  // Lists
+  html = html.replace(/^\s*-\s+(.*?)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>');
+  
+  // Split into paragraphs unless it is a list
+  const blocks = html.split('\n\n');
+  return blocks.map(block => {
+    const trimmed = block.trim();
+    if (trimmed.startsWith('<ul>') || trimmed.startsWith('<ol>') || trimmed.startsWith('<li>')) {
+      return trimmed;
+    }
+    return `<p>${trimmed.replace(/\n/g, '<br/>')}</p>`;
+  }).join('');
+}
+
+// Show/hide typing loader
+let loadingEl = null;
+function showChatLoading() {
+  if (loadingEl) return;
+  loadingEl = document.createElement('div');
+  loadingEl.className = 'chat-msg assistant loading';
+  loadingEl.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+  chatMessages.appendChild(loadingEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function hideChatLoading() {
+  if (loadingEl && loadingEl.parentNode) {
+    loadingEl.parentNode.removeChild(loadingEl);
+  }
+  loadingEl = null;
+}
+
+// Send request
+async function handleChatSubmit(text) {
+  if (!text || text.trim() === '') return;
+  
+  // Add user bubble
+  appendChatMessage('user', text);
+  showChatLoading();
+  
+  try {
+    const activeDevId = currentDev ? currentDev.id : '';
+    const response = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        developerId: activeDevId
+      })
+    });
+    
+    const data = await response.json();
+    hideChatLoading();
+    
+    if (data.isFallback) {
+      appendChatMessage('assistant', data.reply + '\n\n*(Baseline answer — start Gemini for personalized insights)*', true);
+    } else {
+      appendChatMessage('assistant', data.reply, true);
+    }
+  } catch(e) {
+    console.error(e);
+    hideChatLoading();
+    appendChatMessage('assistant', '⚠️ Failed to connect to the assistant backend. Please verify that the Go server is running.');
+  }
+}
+
+// Form submit
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = chatInput.value;
+  chatInput.value = '';
+  handleChatSubmit(text);
+});
+
+// Quick suggestion chips
+chatChips.addEventListener('click', (e) => {
+  const chip = e.target.closest('.chat-chip');
+  if (!chip) return;
+  const q = chip.dataset.q;
+  handleChatSubmit(q);
+});
+
